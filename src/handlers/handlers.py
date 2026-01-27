@@ -155,11 +155,11 @@ class Handlers:
             raise ValueError(f"specs are required for this {params.action} action")
 
         if params.action == "create":
-            result = await self.workspace_services.create_workspace({k: v for k, v in params.specs.model_dump().items() if v is not None})
+            result = await self.workspace_services.create_workspace({k: v for k, v in params.specs.items() if v is not None})
         elif params.action == "delete":
             result = await self.workspace_services.delete_workspace(params.name)
         elif params.action == "update":
-            result = await self.workspace_services.update_workspace(params.name, {k: v for k, v in params.specs.model_dump().items() if v is not None})
+            result = await self.workspace_services.update_workspace(params.name, {k: v for k, v in params.specs.items() if v is not None})
         elif params.action == "switch":
             result = await self.workspace_services.switch_workspace(params.name)
         else:

@@ -95,7 +95,7 @@ class P4MCPServer:
                 "details": {
                     "source_tool": func,
                     "action": params.action,
-                    "params": params.model_dump()
+                    "params": params
                 },
                 
                 "instruction": "User must explicitly approve this operation",
@@ -106,49 +106,49 @@ class P4MCPServer:
         """Register read-only tools (always available)"""
         
         @self.mcp.tool(tags=["read", "server"])
-        async def query_server(params: m.QueryServerParams, ctx: Context) -> dict:
+        async def query_server(params: m.QueryServerParams.model_dump(), ctx: Context) -> dict:
             """Get server info and current user information (READ permission)"""
             result = await self.handlers.handle("query", "server", params)
             self.process_tool_logs("query_server", result, ctx)
             return result
         
         @self.mcp.tool(tags=["read", "workspaces"], enabled="workspaces" in self.toolsets)
-        async def query_workspaces(params: m.QueryWorkspacesParams, ctx: Context) -> dict:
+        async def query_workspaces(params: m.QueryWorkspacesParams.model_dump(), ctx: Context) -> dict:
             """Get workspace details, list workspaces, check type and status (READ permission)"""
             result = await self.handlers.handle("query", "workspaces", params)
             self.process_tool_logs("query_workspaces", result, ctx)
             return result
 
         @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
-        async def query_files(params: m.QueryFilesParams, ctx: Context) -> dict:
+        async def query_files(params: m.QueryFilesParams.model_dump(), ctx: Context) -> dict:
             """Get file content, history, info, diff, annotations (READ permission)"""
             result = await self.handlers.handle("query", "files", params)
             self.process_tool_logs("query_files", result, ctx)
             return result
 
         @self.mcp.tool(tags=["read", "changelists"], enabled="changelists" in self.toolsets)
-        async def query_changelists(params: m.QueryChangelistsParams, ctx: Context) -> dict:
+        async def query_changelists(params: m.QueryChangelistsParams.model_dump(), ctx: Context) -> dict:
             """Get changelist details and list changelists (READ permission)"""
             result = await self.handlers.handle("query", "changelists", params)
             self.process_tool_logs("query_changelists", result, ctx)
             return result
 
         @self.mcp.tool(tags=["read", "shelves"], enabled="shelves" in self.toolsets)
-        async def query_shelves(params: m.QueryShelvesParams, ctx: Context) -> dict:
+        async def query_shelves(params: m.QueryShelvesParams.model_dump(), ctx: Context) -> dict:
             """List shelves, get shelve diff and files (READ permission)"""
             result = await self.handlers.handle("query", "shelves", params)
             self.process_tool_logs("query_shelves", result, ctx)
             return result
 
         @self.mcp.tool(tags=["read", "jobs"], enabled="jobs" in self.toolsets)
-        async def query_jobs(params: m.QueryJobsParams, ctx: Context) -> dict:
+        async def query_jobs(params: m.QueryJobsParams.model_dump(), ctx: Context) -> dict:
             """Get jobs from changelist and get job details (READ permission)"""
             result = await self.handlers.handle("query", "jobs", params)
             self.process_tool_logs("query_jobs", result, ctx)
             return result
 
         @self.mcp.tool(tags=["write", "workspaces"], enabled=not self.readonly and "workspaces" in self.toolsets)
-        async def modify_workspaces(params: m.ModifyWorkspacesParams, ctx: Context) -> dict:
+        async def modify_workspaces(params: m.ModifyWorkspacesParams.model_dump(), ctx: Context) -> dict:
             """Create/delete workspace, Update workspace specs, and switch active workspace (WRITE permission)"""
             if params.action == "delete":
                 # Handle delete operation with approval
@@ -160,7 +160,7 @@ class P4MCPServer:
             return result
 
         @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
-        async def modify_files(params: m.ModifyFilesParams, ctx: Context) -> dict:
+        async def modify_files(params: m.ModifyFilesParams.model_dump(), ctx: Context) -> dict:
             """Add, edit, move, delete, revert, reconcile, resolve, and sync files (WRITE permission)"""
             if params.action == "delete":
                 # Handle delete operation with approval
@@ -172,7 +172,7 @@ class P4MCPServer:
             return result
 
         @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
-        async def modify_changelists(params: m.ModifyChangelistsParams, ctx: Context) -> dict:
+        async def modify_changelists(params: m.ModifyChangelistsParams.model_dump(), ctx: Context) -> dict:
             """Create/delete changelists, update changelists and organize files/jobs (WRITE permission)"""
             if params.action == "delete":
                 # Handle delete operation with approval
@@ -184,7 +184,7 @@ class P4MCPServer:
             return result
 
         @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
-        async def modify_shelves(params: m.ModifyShelvesParams, ctx: Context) -> dict:
+        async def modify_shelves(params: m.ModifyShelvesParams.model_dump(), ctx: Context) -> dict:
             """Create/delete, update shelves and unshelve files (WRITE permission)"""
             if params.action == "delete":
                 # Handle delete operation with approval
@@ -196,14 +196,14 @@ class P4MCPServer:
             return result
 
         @self.mcp.tool(tags=["write", "jobs"], enabled=not self.readonly and "jobs" in self.toolsets)
-        async def modify_jobs(params: m.ModifyJobsParams, ctx: Context) -> dict:
+        async def modify_jobs(params: m.ModifyJobsParams.model_dump(), ctx: Context) -> dict:
             """Link or unlink jobs (WRITE permission)"""
             result = await self.handlers.handle("modify", "jobs", params)
             self.process_tool_logs("modify_jobs", result, ctx)
             return result
 
         @self.mcp.tool(tags=["write", "delete"], enabled=not self.readonly and len(set(self.toolsets) - {"jobs"}) > 0)
-        async def execute_delete(params: m.ExecuteDeleteParams, ctx: Context) -> dict:
+        async def execute_delete(params: m.ExecuteDeleteParams.model_dump(), ctx: Context) -> dict:
             """Execute any approved delete operation from any tool (WRITE permission)"""
             if params.source_tool.split("_")[1] not in self.toolsets:
                 result = {"status": "error", "action": "delete", "message": f"Toolset not allowed: {params.source_tool.split('_')[1]}"}
