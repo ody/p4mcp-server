@@ -10,7 +10,7 @@ from typing import Optional
 
 class LoggingConfig:
     """Configuration constants for logging"""
-    DEFAULT_LOG_LEVEL = "INFO"
+    DEFAULT_LOG_LEVEL = "DEBUG"
     WHEN = "midnight"
     DAY_INTERVAL = 1  # Rotate logs daily
     MAX_LOG_SIZE = 1024 * 1024 * 1024  # 1GB
@@ -90,7 +90,7 @@ class GlobalLogger:
     def _suppress_noisy_loggers(self) -> None:
         """Suppress commonly noisy third-party loggers"""
         for logger_name in LoggingConfig.NOISY_LOGGERS:
-            logging.getLogger(logger_name).setLevel(logging.WARNING)
+            logging.getLogger(logger_name).setLevel(logging.DEBUG)
     
     def _add_handler(self, logger: logging.Logger, handler: logging.Handler, formatter: logging.Formatter) -> None:
         """Helper function to configure and add a handler to the logger"""
