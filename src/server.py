@@ -60,6 +60,17 @@ class P4MCPServer:
         self.shelve_services = ShelveServices(self.p4_manager)
         self.job_services = JobServices(self.p4_manager)
 
+    def _apply_toolset_visibility(self) -> None:
+        """Disable tools based on toolsets and readonly mode."""
+        all_toolsets = {"files", "changelists", "shelves", "workspaces", "jobs"}
+        disabled_tags = all_toolsets - set(self.toolsets)
+        if disabled_tags:
+            self.mcp.disable(tags=disabled_tags, components={"tool"})
+        if self.readonly:
+            self.mcp.disable(tags={"write"}, components={"tool"})
+        if len(set(self.toolsets) - {"jobs"}) == 0:
+            self.mcp.disable(names={"execute_delete"}, components={"tool"})
+
     def process_tool_logs(self, tool_name: str, result: dict, ctx: Context) -> dict:
         """Process incoming data and route to appropriate handler"""
         response = {}
@@ -141,7 +152,7 @@ class P4MCPServer:
             self.process_tool_logs("query_server", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "workspaces"], enabled="workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["read", "workspaces"])
         async def get_workspace(
             workspace_name: Annotated[
                 str,
@@ -167,7 +178,7 @@ class P4MCPServer:
             self.process_tool_logs("get_workspace", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "workspaces"], enabled="workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["read", "workspaces"])
         async def list_workspaces(
             user: Annotated[
                 Optional[str],
@@ -185,7 +196,7 @@ class P4MCPServer:
             self.process_tool_logs("list_workspaces", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def get_file_content(
             file_path: Annotated[
                 str,
@@ -199,7 +210,7 @@ class P4MCPServer:
             self.process_tool_logs("get_file_content", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def get_file_history(
             file_path: Annotated[
                 str,
@@ -217,7 +228,7 @@ class P4MCPServer:
             self.process_tool_logs("get_file_history", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def get_file_info(
             file_path: Annotated[
                 str,
@@ -231,7 +242,7 @@ class P4MCPServer:
             self.process_tool_logs("get_file_info", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def get_file_metadata(
             file_path: Annotated[
                 str,
@@ -245,7 +256,7 @@ class P4MCPServer:
             self.process_tool_logs("get_file_metadata", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def diff_files(
             file_path: Annotated[
                 str,
@@ -267,7 +278,7 @@ class P4MCPServer:
             self.process_tool_logs("diff_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "files"], enabled="files" in self.toolsets)
+        @self.mcp.tool(tags=["read", "files"])
         async def get_file_annotations(
             file_path: Annotated[
                 str,
@@ -281,7 +292,7 @@ class P4MCPServer:
             self.process_tool_logs("get_file_annotations", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "changelists"], enabled="changelists" in self.toolsets)
+        @self.mcp.tool(tags=["read", "changelists"])
         async def get_changelist(
             changelist_id: Annotated[
                 str,
@@ -295,7 +306,7 @@ class P4MCPServer:
             self.process_tool_logs("get_changelist", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "changelists"], enabled="changelists" in self.toolsets)
+        @self.mcp.tool(tags=["read", "changelists"])
         async def list_changelists(
             workspace_name: Annotated[
                 Optional[str],
@@ -331,7 +342,7 @@ class P4MCPServer:
             self.process_tool_logs("list_changelists", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "shelves"], enabled="shelves" in self.toolsets)
+        @self.mcp.tool(tags=["read", "shelves"])
         async def list_shelves(
             user: Annotated[
                 Optional[str],
@@ -349,7 +360,7 @@ class P4MCPServer:
             self.process_tool_logs("list_shelves", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "shelves"], enabled="shelves" in self.toolsets)
+        @self.mcp.tool(tags=["read", "shelves"])
         async def get_shelve_diff(
             changelist_id: Annotated[
                 str,
@@ -363,7 +374,7 @@ class P4MCPServer:
             self.process_tool_logs("get_shelve_diff", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "shelves"], enabled="shelves" in self.toolsets)
+        @self.mcp.tool(tags=["read", "shelves"])
         async def get_shelve_files(
             changelist_id: Annotated[
                 str,
@@ -377,7 +388,7 @@ class P4MCPServer:
             self.process_tool_logs("get_shelve_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "jobs"], enabled="jobs" in self.toolsets)
+        @self.mcp.tool(tags=["read", "jobs"])
         async def list_jobs(
             changelist_id: Annotated[
                 str,
@@ -395,7 +406,7 @@ class P4MCPServer:
             self.process_tool_logs("list_jobs", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["read", "jobs"], enabled="jobs" in self.toolsets)
+        @self.mcp.tool(tags=["read", "jobs"])
         async def get_job(
             job_id: Annotated[
                 str,
@@ -409,7 +420,7 @@ class P4MCPServer:
             self.process_tool_logs("get_job", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "workspaces"], enabled=not self.readonly and "workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["write", "workspaces"])
         async def create_workspace(
             name: Annotated[str, Field(description="Workspace name.")],
             root: Annotated[Optional[str], Field(description="Workspace root path.")] = None,
@@ -426,7 +437,7 @@ class P4MCPServer:
             self.process_tool_logs("create_workspace", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "workspaces"], enabled=not self.readonly and "workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["write", "workspaces"])
         async def update_workspace(
             name: Annotated[str, Field(description="Workspace name.")],
             root: Annotated[Optional[str], Field(description="Workspace root path.")] = None,
@@ -443,7 +454,7 @@ class P4MCPServer:
             self.process_tool_logs("update_workspace", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "workspaces"], enabled=not self.readonly and "workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["write", "workspaces"])
         async def delete_workspace(
             workspace_name: Annotated[str, Field(description="Workspace name to delete.")],
             ctx: Context = None
@@ -457,7 +468,7 @@ class P4MCPServer:
                 {"workspace_name": workspace_name}
             )
 
-        @self.mcp.tool(tags=["write", "workspaces"], enabled=not self.readonly and "workspaces" in self.toolsets)
+        @self.mcp.tool(tags=["write", "workspaces"])
         async def switch_workspace(
             workspace_name: Annotated[str, Field(description="Workspace name to switch to.")],
             ctx: Context = None
@@ -468,7 +479,7 @@ class P4MCPServer:
             self.process_tool_logs("switch_workspace", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def add_files(
             file_paths: Annotated[List[str], Field(description="File paths to add.")],
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -480,7 +491,7 @@ class P4MCPServer:
             self.process_tool_logs("add_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def edit_files(
             file_paths: Annotated[List[str], Field(description="File paths to edit.")],
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -492,7 +503,7 @@ class P4MCPServer:
             self.process_tool_logs("edit_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def move_files(
             source_paths: Annotated[List[str], Field(description="Source file paths to move.")],
             target_paths: Annotated[List[str], Field(description="Target file paths to move to.")],
@@ -505,7 +516,7 @@ class P4MCPServer:
             self.process_tool_logs("move_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def delete_files(
             file_paths: Annotated[List[str], Field(description="File paths to delete.")],
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -520,7 +531,7 @@ class P4MCPServer:
                 {"file_paths": file_paths, "changelist": changelist}
             )
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def revert_files(
             file_paths: Annotated[List[str], Field(description="File paths to revert.")],
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -532,7 +543,7 @@ class P4MCPServer:
             self.process_tool_logs("revert_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def reconcile_files(
             file_paths: Annotated[Optional[List[str]], Field(description="File paths to reconcile.")] = None,
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -544,7 +555,7 @@ class P4MCPServer:
             self.process_tool_logs("reconcile_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def resolve_files(
             file_paths: Annotated[Optional[List[str]], Field(description="File paths to resolve.")] = None,
             changelist: Annotated[str, Field(description="Changelist ID or 'default'.")] = "default",
@@ -560,7 +571,7 @@ class P4MCPServer:
             self.process_tool_logs("resolve_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "files"], enabled=not self.readonly and "files" in self.toolsets)
+        @self.mcp.tool(tags=["write", "files"])
         async def sync_files(
             file_paths: Annotated[List[str], Field(description="File paths to sync.")],
             force: Annotated[bool, Field(description="Force sync even if files are up-to-date.")] = False,
@@ -572,7 +583,7 @@ class P4MCPServer:
             self.process_tool_logs("sync_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
+        @self.mcp.tool(tags=["write", "changelists"])
         async def create_changelist(
             description: Annotated[str, Field(description="Changelist description.")],
             ctx: Context = None
@@ -583,7 +594,7 @@ class P4MCPServer:
             self.process_tool_logs("create_changelist", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
+        @self.mcp.tool(tags=["write", "changelists"])
         async def update_changelist(
             changelist_id: Annotated[str, Field(description="Changelist ID to update.")],
             description: Annotated[str, Field(description="Updated changelist description.")],
@@ -595,7 +606,7 @@ class P4MCPServer:
             self.process_tool_logs("update_changelist", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
+        @self.mcp.tool(tags=["write", "changelists"])
         async def submit_changelist(
             changelist_id: Annotated[str, Field(description="Changelist ID to submit.")],
             ctx: Context = None
@@ -606,7 +617,7 @@ class P4MCPServer:
             self.process_tool_logs("submit_changelist", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
+        @self.mcp.tool(tags=["write", "changelists"])
         async def delete_changelist(
             changelist_id: Annotated[str, Field(description="Changelist ID to delete.")],
             ctx: Context = None
@@ -620,7 +631,7 @@ class P4MCPServer:
                 {"changelist_id": changelist_id}
             )
 
-        @self.mcp.tool(tags=["write", "changelists"], enabled=not self.readonly and "changelists" in self.toolsets)
+        @self.mcp.tool(tags=["write", "changelists"])
         async def reopen_files(
             changelist_id: Annotated[str, Field(description="Target changelist ID.")],
             file_paths: Annotated[List[str], Field(description="File paths to move to the changelist.")],
@@ -632,7 +643,7 @@ class P4MCPServer:
             self.process_tool_logs("reopen_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
+        @self.mcp.tool(tags=["write", "shelves"])
         async def shelve_files(
             changelist_id: Annotated[str, Field(description="Changelist ID to shelve.")],
             file_paths: Annotated[List[str], Field(description="File paths to shelve.")],
@@ -645,7 +656,7 @@ class P4MCPServer:
             self.process_tool_logs("shelve_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
+        @self.mcp.tool(tags=["write", "shelves"])
         async def unshelve_files(
             changelist_id: Annotated[str, Field(description="Shelved changelist ID to unshelve.")],
             file_paths: Annotated[Optional[List[str]], Field(description="File paths to unshelve.")] = None,
@@ -658,7 +669,7 @@ class P4MCPServer:
             self.process_tool_logs("unshelve_files", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
+        @self.mcp.tool(tags=["write", "shelves"])
         async def update_shelve(
             changelist_id: Annotated[str, Field(description="Shelved changelist ID to update.")],
             file_paths: Annotated[List[str], Field(description="File paths to update in the shelve.")],
@@ -671,7 +682,7 @@ class P4MCPServer:
             self.process_tool_logs("update_shelve", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
+        @self.mcp.tool(tags=["write", "shelves"])
         async def delete_shelve(
             changelist_id: Annotated[str, Field(description="Shelved changelist ID to delete.")],
             file_paths: Annotated[Optional[List[str]], Field(description="File paths to delete from the shelve.")] = None,
@@ -686,7 +697,7 @@ class P4MCPServer:
                 {"changelist_id": changelist_id, "file_paths": file_paths or []}
             )
 
-        @self.mcp.tool(tags=["write", "shelves"], enabled=not self.readonly and "shelves" in self.toolsets)
+        @self.mcp.tool(tags=["write", "shelves"])
         async def unshelve_to_changelist(
             changelist_id: Annotated[str, Field(description="Shelved changelist ID to unshelve.")],
             target_changelist: Annotated[str, Field(description="Target changelist ID or 'default'.")] = "default",
@@ -698,7 +709,7 @@ class P4MCPServer:
             self.process_tool_logs("unshelve_to_changelist", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "jobs"], enabled=not self.readonly and "jobs" in self.toolsets)
+        @self.mcp.tool(tags=["write", "jobs"])
         async def modify_jobs(
             action: Annotated[
                 Literal["link_job", "unlink_job"],
@@ -717,7 +728,7 @@ class P4MCPServer:
             self.process_tool_logs("modify_jobs", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "delete"], enabled=not self.readonly and len(set(self.toolsets) - {"jobs"}) > 0)
+        @self.mcp.tool(tags=["write", "delete"]) - {"jobs"}) > 0)
         async def execute_delete(
             source_tool: Annotated[
                 Literal["delete_workspace", "delete_changelist", "delete_files", "delete_shelve"],
@@ -780,6 +791,8 @@ class P4MCPServer:
             response = {"status": result.get("status"), "action": "delete", "message": result.get("message", result)}
             self.process_tool_logs("execute_delete", response, ctx)
             return response
+
+        self._apply_toolset_visibility()
         
 
     def run(self):
