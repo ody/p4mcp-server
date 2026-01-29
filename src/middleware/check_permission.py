@@ -133,8 +133,8 @@ class CheckPermissionMiddleware(Middleware):
                 # Check tool-specific permissions
                 # await self._check_tool_permissions(tool_name, tool_info)
 
-                # Check if tool is enabled
-                if not tool.enabled:
+                # Check if tool is enabled (v3 tools may not expose enabled flag)
+                if hasattr(tool, "enabled") and not tool.enabled:
                     raise ToolError("Tool is currently disabled")
 
                 logger.info(f"Permission check passed for {tool_name} "
