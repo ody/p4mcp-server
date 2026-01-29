@@ -1,5 +1,5 @@
 # FastMCP framework
-fastmcp>=2.14.4
+fastmcp>=3.0.0b1
 
 # Perforce Python API
 p4python>=2023.1
