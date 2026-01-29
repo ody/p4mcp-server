@@ -728,7 +728,7 @@ class P4MCPServer:
             self.process_tool_logs("modify_jobs", response, ctx)
             return response
 
-        @self.mcp.tool(tags=["write", "delete"]) - {"jobs"}) > 0)
+        @self.mcp.tool(tags=["write", "delete"])
         async def execute_delete(
             source_tool: Annotated[
                 Literal["delete_workspace", "delete_changelist", "delete_files", "delete_shelve"],
